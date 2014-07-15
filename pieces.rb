@@ -1,6 +1,8 @@
 class Piece
 
-  attr_reader :color, :pos
+  attr_accessor :pos
+
+  attr_reader :color
 
   def initialize(pos, board, color)
     @pos, @color = pos, color
@@ -8,45 +10,46 @@ class Piece
     @board[pos] = self
   end
 
-  # def moves
-#     move_spaces = []
-#
-#
-#     move_spaces
-#   end
+  def inspect
+    [self.class,color,pos].inspect
+  end
+
+  def dup(new_board)
+    self.class.new(@pos,new_board,@color)
+  end
 
 end
 
 class SlidingPiece < Piece
-  RANK_POS_DELTAS = [[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7]]
 
-  RANK_NEG_DELTAS = [[0,-1],[0,-2],[0,-3],[0,-4],[0,-5],[0,-6],[0,-7]]
+  RANK_FILE_DELTAS = [[0,1],[0,-1],[1,0],[-1,0]]
 
-  FILE_POS_DELTAS = [[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0]]
-  FILE_NEG_DELTAS = [[-1,0],[-2,0],[-3,0],[-4,0],[-5,0],[-6,0],[-7,0]]
-
-  DIAG_NE_DELTAS = [[1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7]]
-  DIAG_SW_DELTAS = [[-1,-1],[-2,-2],[-3,-3],[-4,-4],[-5,-5],[-6,-6],[-7,-7]]
-  DIAG_NW_DELTAS = [[-1,1],[-2,2],[-3,3],[-4,4],[-5,5],[-6,6],[-7,7]]
-  DIAG_SE_DELTAS = [[1,-1],[2,-2],[3,-3],[4,-4],[5,-5],[6,-6],[7,-7]]
+  DIAG_DELTAS = [[1,1],[-1,-1],[-1,1],[1,-1]]
 
   def moves
+    p self.class
+
     possible_pos = []
 
-    move_dirs.each do |direction|
-      direction.each do |dx,dy|
-        new_x, new_y = @pos[0] + dx, @pos[1] + dy
-        break if (!(0..7).include?(new_x) || !(0..7).include?(new_y))
+    current_pos = pos
 
-        unless @board[[new_x,new_y]].nil?
-          break if @board[[new_x,new_y]].color == @color
+    move_dirs.each do |dx,dy|
+      current_pos = [current_pos[0] + dx, current_pos[1] + dy]
+      while @board.on_board?(current_pos)
+        if @board[current_pos].nil?
+          possible_pos << current_pos
+          current_pos = [current_pos[0] + dx, current_pos[1] + dy]
+        else
+          if @board[current_pos].color == @color
+            break
+          else
+            possible_pos << current_pos
+            break
+          end
         end
-
-        possible_pos << [new_x,new_y]
       end
+      current_pos = pos
     end
-
-
 
     possible_pos
   end
@@ -56,8 +59,7 @@ end
 class Queen < SlidingPiece
 
   def move_dirs
-    dirs = [RANK_POS_DELTAS,RANK_NEG_DELTAS,FILE_POS_DELTAS,FILE_NEG_DELTAS,
-            DIAG_NE_DELTAS,DIAG_SW_DELTAS,DIAG_NW_DELTAS,DIAG_SE_DELTAS]
+    dirs = RANK_FILE_DELTAS + DIAG_DELTAS
   end
 
 end
@@ -65,7 +67,7 @@ end
 class Bishop <SlidingPiece
 
   def move_dirs
-    dirs = [DIAG_NE_DELTAS,DIAG_SW_DELTAS,DIAG_NW_DELTAS,DIAG_SE_DELTAS]
+    dirs = DIAG_DELTAS
   end
 
 end
@@ -73,7 +75,7 @@ end
 class Rook <SlidingPiece
 
   def move_dirs
-    dirs = [RANK_POS_DELTAS,RANK_NEG_DELTAS,FILE_POS_DELTAS,FILE_NEG_DELTAS]
+    dirs = RANK_FILE_DELTAS
   end
 
 end
@@ -81,6 +83,8 @@ end
 class SteppingPiece < Piece
 
   def moves
+    p self.class
+
     news = []
     deltas.each do |dx, dy|
       new_x, new_y = @pos[0] + dx, @pos[1] + dy
@@ -120,31 +124,55 @@ end
 
 class Pawn < Piece
 
+  def captures
+    deltas = (color == :white ?  [[1,1] [-1,1]] : [[1,-1], [-1,-1]])
+
+    capture_pos = []
+
+    deltas.each do |dx, dy|
+      new_pos = [pos[0]+dx, pos[1]+dy]
+      next if !@board.on_board?(new_pos)|| @board[new_pos].nil?
+      capture_pos << new_pos if @board[new_pos].color != color
+    end
+
+    capture_pos
+  end
+
   def moves
+    p self.class
+
     moves = []
 
     if color == :white
-      moves << [pos[0], pos[1]+1] if @board[[pos[0], pos[1]+1]].nil?
-      moves << [pos[0], pos[1]+2] if pos[1] == 1
-      unless @board[[pos[0]+1, pos[1]+1]].nil?
-        moves << [pos[0]+1, pos[1]+1] if @board[[pos[0]+1, pos[1]+1]].color == :black
+
+      new_pos = [pos[0], pos[1]+1]
+
+      if @board.on_board?(new_pos)
+        moves << new_pos if @board[new_pos].nil?
       end
-      unless @board[[pos[0]-1, pos[1]+1]].nil?
-        moves << [pos[0]-1, pos[1]+1] if @board[[pos[0]-1, pos[1]+1]].color == :black
+
+      new_pos = [pos[0], pos[1]+2]
+
+      if @board.on_board?(new_pos)
+        moves << new_pos if pos[1] == 1 && @board[new_pos].nil?
       end
 
     else
-      moves << [pos[0], pos[1]-1] if @board[[pos[0], pos[1]-1]].nil?
-      moves << [pos[0], pos[1]-2] if pos[1] == 6
-      unless @board[[pos[0]+1, pos[1]-1]].nil?
-        moves << [pos[0]+1, pos[1]-1] if @board[[pos[0]+1, pos[1]-1]].color == :white
+      new_pos = [pos[0], pos[1] - 1]
+
+      if @board.on_board?(new_pos)
+        moves << new_pos if @board[new_pos].nil?
       end
-      unless @board[[pos[0]-1, pos[1]-1]].nil?
-        moves << [pos[0]-1, pos[1]-1] if @board[[pos[0]-1, pos[1]-1]].color == :white
+
+      new_pos = [pos[0], pos[1] - 2]
+
+      if @board.on_board?(new_pos)
+        moves << new_pos if pos[1] == 6 && @board[new_pos].nil?
       end
+
     end
 
-      moves
+    moves + captures
   end
 
 end

@@ -89,8 +89,8 @@ class SteppingPiece < Piece
       end
     end
 
-    news.select { |new_pos| @board[[new_x,new_y]].nil? ||
-      @board[[new_x,new_y]].color != @color }
+    news.select { |new_pos| @board[new_pos].nil? ||
+      @board[new_pos].color != @color }
   end
 
 

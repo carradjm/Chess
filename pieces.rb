@@ -1,16 +1,19 @@
 class Piece
 
-  def initialize(loc, board, color)
-    @loc, @color = loc, color
+  attr_reader :color, :pos
+
+  def initialize(pos, board, color)
+    @pos, @color = pos, color
     @board = board
+    @board[pos] = self
   end
 
-  def moves
-    move_spaces = []
-
-
-    move_spaces
-  end
+  # def moves
+#     move_spaces = []
+#
+#
+#     move_spaces
+#   end
 
 end
 
@@ -33,16 +36,19 @@ class SlidingPiece < Piece
     move_dirs.each do |direction|
       direction.each do |dx,dy|
         new_x, new_y = @pos[0] + dx, @pos[1] + dy
-        break if (!(0..7).include?(new_x) || !(0..7).include?(new_y)) ||
-        @board[new_x,new_y].color == @color
+        break if (!(0..7).include?(new_x) || !(0..7).include?(new_y))
 
-          possible_moves << [new_x,new_y]
+        unless @board[[new_x,new_y]].nil?
+          break if @board[[new_x,new_y]].color == @color
         end
+
+        possible_pos << [new_x,new_y]
+      end
     end
 
 
 
-    possible_moves
+    possible_pos
   end
 
 end
@@ -74,22 +80,71 @@ end
 
 class SteppingPiece < Piece
 
+  def moves
+    news = []
+    deltas.each do |dx, dy|
+      new_x, new_y = @pos[0] + dx, @pos[1] + dy
+      if (0..7).include?(new_x) && (0..7).include?(new_y)
+        news << [new_x, new_y]
+      end
+    end
+
+    news.select { |new_pos| @board[[new_x,new_y]].nil? ||
+      @board[[new_x,new_y]].color != @color }
+  end
+
+
 end
 
 class Knight < SteppingPiece
 
-  def move_dirs
+  def deltas
+    [[2, 1],[2, -1],
+     [-2, 1],[-2, -1],
+     [1, 2],[1, -2],
+     [-1, 2],[-1, -2]]
   end
 
 end
 
 class King < SteppingPiece
 
-  def move_dirs
+  def deltas
+    [[1, 1],[-1, -1],
+     [1, -1],[-1, 1],
+     [1, 0],[-1, 0],
+     [0, 1],[0, -1]]
   end
 
 end
 
 class Pawn < Piece
+
+  def moves
+    moves = []
+
+    if color == :white
+      moves << [pos[0], pos[1]+1] if @board[[pos[0], pos[1]+1]].nil?
+      moves << [pos[0], pos[1]+2] if pos[1] == 1
+      unless @board[[pos[0]+1, pos[1]+1]].nil?
+        moves << [pos[0]+1, pos[1]+1] if @board[[pos[0]+1, pos[1]+1]].color == :black
+      end
+      unless @board[[pos[0]-1, pos[1]+1]].nil?
+        moves << [pos[0]-1, pos[1]+1] if @board[[pos[0]-1, pos[1]+1]].color == :black
+      end
+
+    else
+      moves << [pos[0], pos[1]-1] if @board[[pos[0], pos[1]-1]].nil?
+      moves << [pos[0], pos[1]-2] if pos[1] == 6
+      unless @board[[pos[0]+1, pos[1]-1]].nil?
+        moves << [pos[0]+1, pos[1]-1] if @board[[pos[0]+1, pos[1]-1]].color == :white
+      end
+      unless @board[[pos[0]-1, pos[1]-1]].nil?
+        moves << [pos[0]-1, pos[1]-1] if @board[[pos[0]-1, pos[1]-1]].color == :white
+      end
+    end
+
+      moves
+  end
 
 end

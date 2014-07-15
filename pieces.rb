@@ -18,6 +18,18 @@ class Piece
     self.class.new(@pos,new_board,@color)
   end
 
+  def valid_moves
+    valids = []
+
+    moves.each do |new_pos|
+      temp_board = @board.dup
+      temp_board.move!(pos, new_pos)
+      valids << new_pos if !temp_board.in_check?
+    end
+
+    valids
+  end
+
 end
 
 class SlidingPiece < Piece
@@ -27,7 +39,6 @@ class SlidingPiece < Piece
   DIAG_DELTAS = [[1,1],[-1,-1],[-1,1],[1,-1]]
 
   def moves
-    p self.class
 
     possible_pos = []
 
@@ -48,6 +59,7 @@ class SlidingPiece < Piece
           end
         end
       end
+
       current_pos = pos
     end
 
@@ -62,12 +74,20 @@ class Queen < SlidingPiece
     dirs = RANK_FILE_DELTAS + DIAG_DELTAS
   end
 
+  def display
+    color == :white ? "wQ" : "bQ"
+  end
+
 end
 
 class Bishop <SlidingPiece
 
   def move_dirs
     dirs = DIAG_DELTAS
+  end
+
+  def display
+    color == :white ? "wB" : "bB"
   end
 
 end
@@ -78,12 +98,15 @@ class Rook <SlidingPiece
     dirs = RANK_FILE_DELTAS
   end
 
+  def display
+    color == :white ? "wR" : "bR"
+  end
+
 end
 
 class SteppingPiece < Piece
 
   def moves
-    p self.class
 
     news = []
     deltas.each do |dx, dy|
@@ -109,6 +132,10 @@ class Knight < SteppingPiece
      [-1, 2],[-1, -2]]
   end
 
+  def display
+    color == :white ? "wN" : "bN"
+  end
+
 end
 
 class King < SteppingPiece
@@ -118,6 +145,10 @@ class King < SteppingPiece
      [1, -1],[-1, 1],
      [1, 0],[-1, 0],
      [0, 1],[0, -1]]
+  end
+
+  def display
+    color == :white ? "wK" : "bK"
   end
 
 end
@@ -173,6 +204,10 @@ class Pawn < Piece
     end
 
     moves + captures
+  end
+
+  def display
+    color == :white ? "wP" : "bP"
   end
 
 end

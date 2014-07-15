@@ -35,9 +35,28 @@ class Board
     nil
   end
 
+  def display
+      print "┌#{"──┬"* (7)}──┐\n"
+
+      (0...8).to_a.reverse.each do |y|
+        print "│"
+        8.times do |x|
+          if !self[[x,y]].nil?
+            print self[[x,y]].display
+          else
+            print "  "
+          end
+          print "│"
+        end
+        print "\n"
+        print "├#{"──┼" * (7)}──┤\n" unless y == 0
+      end
+      print "└#{"──┴"* (7)}──┘\n"
+      nil
+    end
+
   def [](pos)
     x,y = pos
-    p [x,y]
     @grid[x][y]
   end
 
@@ -67,7 +86,7 @@ class Board
       raise NoPieceError
     end
 
-    if self[start].moves.include?(end_pos)
+    if self[start].valid_moves.include?(end_pos)
       self[end_pos] = self[start]
       self[end_pos].pos = end_pos
     else
@@ -76,6 +95,17 @@ class Board
 
     nil
   end
+
+  def move!(start, end_pos)
+
+    if self[start].moves.include?(end_pos)
+      self[end_pos] = self[start]
+      self[end_pos].pos = end_pos
+    end
+
+    nil
+  end
+
 
   def on_board?(pos)
     (0..7).include?(pos[0]) && (0..7).include?(pos[1])
@@ -88,6 +118,16 @@ class Board
     end
 
     dup_board
+  end
+
+  def checkmate?
+    return false if !self.in_check?
+
+    @grid.flatten.compact.each do |piece|
+      return false unless piece.valid_moves.empty?
+    end
+
+    true
   end
 
 end

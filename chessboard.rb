@@ -1,4 +1,9 @@
+require './pieces.rb'
+require 'colorize'
+
 class Board
+
+  attr_accessor :white_king, :black_king
 
   def initialize(duplicate = false)
     @grid = Array.new(8) {Array.new(8)}
@@ -36,22 +41,24 @@ class Board
   end
 
   def display
-      print "┌#{"──┬"* (7)}──┐\n"
+      print "   ┌#{"───┬"* (7)}───┐\n".colorize(:light_cyan)
 
       (0...8).to_a.reverse.each do |y|
-        print "│"
+        print " #{y+1}".colorize(:light_black)
+        print " │".colorize(:light_cyan)
         8.times do |x|
           if !self[[x,y]].nil?
-            print self[[x,y]].display
+            print " #{self[[x,y]].display} "
           else
-            print "  "
+            print "   "
           end
-          print "│"
+          print "│".colorize(:light_cyan)
         end
         print "\n"
-        print "├#{"──┼" * (7)}──┤\n" unless y == 0
+        print "   ├#{"───┼" * (7)}───┤\n".colorize(:light_cyan) unless y == 0
       end
-      print "└#{"──┴"* (7)}──┘\n"
+      print "   └#{"───┴"* (7)}───┘\n".colorize(:light_cyan)
+      print "     A   B   C   D   E   F   G   H  \n".colorize(:light_black)
       nil
     end
 
@@ -89,6 +96,7 @@ class Board
     if self[start].valid_moves.include?(end_pos)
       self[end_pos] = self[start]
       self[end_pos].pos = end_pos
+      self[start] = nil
     else
       raise IllegalMoveError
     end
@@ -114,20 +122,33 @@ class Board
   def dup
     dup_board = Board.new(true)
     @grid.flatten.compact.each do |piece|
-      piece.dup(dup_board)
+      if piece.class == King
+        if piece.color == :white
+          dup_board.white_king = piece.dup(dup_board)
+        else
+          dup_board.black_king = piece.dup(dup_board)
+        end
+      else
+        piece.dup(dup_board)
+      end
     end
 
     dup_board
   end
 
-  def checkmate?
-    return false if !self.in_check?
+  def color_checkmate?(color)
+    return false if !self.in_check?(color)
 
     @grid.flatten.compact.each do |piece|
+      next if piece.color != color
       return false unless piece.valid_moves.empty?
     end
 
     true
+  end
+
+  def checkmate?
+    self.color_checkmate?(:white) || self.color_checkmate?(:black)
   end
 
 end

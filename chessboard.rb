@@ -42,31 +42,57 @@ class Board
     nil
   end
 
-  def display
-      print "   ┌#{"───┬"* (7)}───┐ ".colorize(:light_cyan)
-      @jail.each {|piece| print piece.display if piece.color == :black}
-      print "\n"
+  # def display
+ #      print "   ┌#{"───┬"* (7)}───┐ ".colorize(:light_cyan)
+ #      @jail.each {|piece| print piece.display if piece.color == :black}
+ #      print "\n"
+ #
+ #      (0...8).to_a.reverse.each do |y|
+ #        print " #{y+1}".colorize(:light_black)
+ #        print " │".colorize(:light_cyan)
+ #        8.times do |x|
+ #          if !self[[x,y]].nil?
+ #            print " #{self[[x,y]].display} "
+ #          else
+ #            print "   "
+ #          end
+ #          print "│".colorize(:light_cyan)
+ #        end
+ #        print "\n"
+ #        print "   ├#{"───┼" * (7)}───┤\n".colorize(:light_cyan) unless y == 0
+ #      end
+ #      print "   └#{"───┴"* (7)}───┘ ".colorize(:light_cyan)
+ #      @jail.each {|piece| print piece.display if piece.color == :white}
+ #      print "\n"
+ #      print "     A   B   C   D   E   F   G   H  \n".colorize(:light_black)
+ #      nil
+ #  end
 
-      (0...8).to_a.reverse.each do |y|
-        print " #{y+1}".colorize(:light_black)
-        print " │".colorize(:light_cyan)
+   def display
+     colors = { 0 => :light_white, 1 => :white }
+     (0...8).to_a.reverse.each do |y|
+        print " #{y+1} ".colorize(:light_black)
+
         8.times do |x|
-          if !self[[x,y]].nil?
-            print " #{self[[x,y]].display} "
+          if self[[x,y]].nil?
+            print "  ".colorize( :background => colors[(x+y)%2] )
           else
-            print "   "
+            print "#{self[[x,y]].display} ".colorize( :background => colors[(x+y)%2] )
           end
-          print "│".colorize(:light_cyan)
+
+          if y == 7
+            @jail.each {|piece| print piece.display if piece.color == :black}
+          elsif y == 0
+            @jail.each {|piece| print piece.display if piece.color == :white}
+          end
         end
+
         print "\n"
-        print "   ├#{"───┼" * (7)}───┤\n".colorize(:light_cyan) unless y == 0
       end
-      print "   └#{"───┴"* (7)}───┘ ".colorize(:light_cyan)
-      @jail.each {|piece| print piece.display if piece.color == :white}
-      print "\n"
-      print "     A   B   C   D   E   F   G   H  \n".colorize(:light_black)
-      nil
-  end
+
+
+      print "   A B C D E F G H \n".colorize(:light_black)
+    end
 
   def [](pos)
     x,y = pos

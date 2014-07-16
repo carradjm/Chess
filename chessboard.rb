@@ -8,6 +8,7 @@ class Board
   def initialize(duplicate = false)
     @grid = Array.new(8) {Array.new(8)}
     setup_board if !duplicate
+    @jail = []
   end
 
   def setup_board
@@ -42,7 +43,9 @@ class Board
   end
 
   def display
-      print "   ┌#{"───┬"* (7)}───┐\n".colorize(:light_cyan)
+      print "   ┌#{"───┬"* (7)}───┐ ".colorize(:light_cyan)
+      @jail.each {|piece| print piece.display if piece.color == :black}
+      print "\n"
 
       (0...8).to_a.reverse.each do |y|
         print " #{y+1}".colorize(:light_black)
@@ -58,7 +61,9 @@ class Board
         print "\n"
         print "   ├#{"───┼" * (7)}───┤\n".colorize(:light_cyan) unless y == 0
       end
-      print "   └#{"───┴"* (7)}───┘\n".colorize(:light_cyan)
+      print "   └#{"───┴"* (7)}───┘ ".colorize(:light_cyan)
+      @jail.each {|piece| print piece.display if piece.color == :white}
+      print "\n"
       print "     A   B   C   D   E   F   G   H  \n".colorize(:light_black)
       nil
   end
@@ -75,34 +80,31 @@ class Board
     nil
   end
 
-  def in_check?(color)
-    king_pos = (color == :white ? @white_king.pos : @black_king.pos)
-
-    @grid.flatten.compact.each do |piece|
-      unless piece.color == color
-        piece.moves.each do |move|
-          return true if move == king_pos
-        end
-      end
-    end
-
-    false
-  end
-
-  def move(start, end_pos)
+  def move(start, end_pos, color)
 
     if self[start].nil?
       raise NoPieceError
     end
 
+    if self[start].color != color
+      raise NotYoPieceError
+    end
+
     if self[start].valid_moves.include?(end_pos)
+      @jail << self[end_pos]
       self[end_pos] = self[start]
       self[end_pos].pos = end_pos
       self[start] = nil
     else
-      raise IllegalMoveError
+      if self[start].moves.include?(end_pos)
+        raise MoveToCheckError
+      else
+        raise IllegalMoveError
+      end
     end
 
+    @jail.compact!
+    @jail.sort_by! {|piece| piece.power}
     nil
   end
 
@@ -115,7 +117,6 @@ class Board
 
     nil
   end
-
 
   def on_board?(pos)
     (0..7).include?(pos[0]) && (0..7).include?(pos[1])
@@ -139,6 +140,20 @@ class Board
     dup_board
   end
 
+  def in_check?(color)
+    king_pos = (color == :white ? @white_king.pos : @black_king.pos)
+
+    @grid.flatten.compact.each do |piece|
+      unless piece.color == color
+        piece.moves.each do |move|
+          return true if move == king_pos
+        end
+      end
+    end
+
+    false
+  end
+
   def color_checkmate?(color)
     return false if !self.in_check?(color)
 
@@ -160,4 +175,10 @@ class IllegalMoveError < StandardError
 end
 
 class NoPieceError < StandardError
+end
+
+class NotYoPieceError < StandardError
+end
+
+class MoveToCheckError < StandardError
 end

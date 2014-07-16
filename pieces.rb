@@ -52,7 +52,7 @@ class SlidingPiece < Piece
           move_pos << current_pos
           current_pos = [current_pos[0] + dx, current_pos[1] + dy]
         else
-          move_pos << current_pos if @board[current_pos].color == @color
+          move_pos << current_pos unless @board[current_pos].color == @color
           break
         end
       end
@@ -71,6 +71,10 @@ class Queen < SlidingPiece
     color == :white ? "♕" : "♛"
   end
 
+  def power
+    1
+  end
+
   private
 
   def move_directions
@@ -85,6 +89,10 @@ class Bishop <SlidingPiece
     color == :white ? "♗" : "♝"
   end
 
+  def power
+    3
+  end
+
   private
 
   def move_directions
@@ -97,6 +105,10 @@ class Rook <SlidingPiece
 
   def display
     color == :white ? "♖" : "♜"
+  end
+
+  def power
+    2
   end
 
   private
@@ -129,6 +141,10 @@ class Knight < SteppingPiece
 
   def display
     color == :white ? "♘" : "♞"
+  end
+
+  def power
+    4
   end
 
   private
@@ -165,6 +181,10 @@ class Pawn < Piece
     color == :white ? "♙" : "♟"
   end
 
+  def power
+    5
+  end
+
   def moves
     moves_to_empty + captures
   end
@@ -172,19 +192,20 @@ class Pawn < Piece
   private
 
   def moves_to_empty
+    home_row = ( color == :white ? 1 : 6 )
     dy = ( color == :white ? 1 : -1 )
     move_pos = []
 
     new_pos = [pos[0], pos[1] + dy] #regular move
 
     if @board.on_board?(new_pos)
-      potential_moves << new_pos if @board[new_pos].nil?
+      move_pos << new_pos if @board[new_pos].nil?
     end
 
-    new_pos = [pos[0], pos[1] + 2 * dy] #optional for first move only
+    new_pos = [pos[0], pos[1] + (2 * dy)] #optional for first move only
 
     if @board.on_board?(new_pos)
-      potential_moves << new_pos if pos[1] == 1 && @board[new_pos].nil?
+      move_pos << new_pos if pos[1] == home_row && @board[new_pos].nil?
     end
 
     move_pos

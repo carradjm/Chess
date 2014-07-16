@@ -52,6 +52,9 @@ class Game
       rescue NoPieceError
         puts "There is no piece at that position."
         retry
+
+      rescue PromotePawn
+        @board.promote_pawn(playing.color)
       end
 
       playing = ( playing == @white ? @black : @white ) #switches turns
@@ -78,7 +81,9 @@ class HumanPlayer
   end
 
   def choose_move
-    puts "#{@name}, please enter your move in the form of a8,b8 (move from a8 to b8)."
+    puts "#{@name}, please enter your move in the \n
+          form of 'a8,b8' (move from A8 to B8).\n
+          Type 'short' or 'long' to castle."
 
     begin
       input = gets.chomp

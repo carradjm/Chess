@@ -80,12 +80,12 @@ class Board
           else
             print "#{self[[x,y]].display} ".colorize( :background => colors[(x+y)%2] )
           end
+        end
 
-          if y == 7
-            @jail.each {|piece| print piece.display if piece.color == :black}
-          elsif y == 0
-            @jail.each {|piece| print piece.display if piece.color == :white}
-          end
+        if y == 7
+          @jail.each {|piece| print piece.display if piece.color == :black}
+        elsif y == 0
+          @jail.each {|piece| print piece.display if piece.color == :white}
         end
 
         print "\n"
@@ -137,6 +137,12 @@ class Board
     @jail.compact!
     @jail.sort_by! {|piece| piece.power}
 
+    #check for pawn promotion
+    last_rank = (color == :white ? 7 : 0 )
+    if self[end_pos].class == Pawn && end_pos[1] == last_rank
+      raise PromotePawn
+    end
+
     nil
   end
 
@@ -185,6 +191,38 @@ class Board
     #rook
     self[[3,y]], self[[0,y]] = self[[0,y]], nil
     self[[3,y]].pos = [3,y]
+  end
+
+  def promote_pawn(color)
+    last_rank = (color == :white ? 7 : 0)
+
+    position = nil
+    8.times do |x|
+      if self[[x,last_rank]].class == Pawn
+        position = [x,last_rank]
+        break
+      end
+    end
+
+    puts "You must promote your pawn.\n
+          Enter 'Q', 'R', 'B', or 'N' to select a piece."
+    begin
+      piece = gets.chomp.downcase
+
+      new_piece = case piece
+      when 'q' then Queen.new(position, self, color)
+      when 'r' then Rook.new(position, self, color)
+      when 'b' then Bishop.new(position, self, color)
+      when 'n' then Knight.new(position, self, color)
+      else raise BadInput
+      end
+
+    rescue BadInput
+      puts "Try again."
+      retry
+    end
+
+    nil
   end
 
   def on_board?(pos)
@@ -253,4 +291,7 @@ class MoveToCheckError < StandardError
 end
 
 class NoCastleError < StandardError
+end
+
+class PromotePawn < StandardError
 end

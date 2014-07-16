@@ -1,4 +1,3 @@
-require 'debugger'
 
 class Piece
 
@@ -42,66 +41,69 @@ class SlidingPiece < Piece
 
   def moves
 
-    possible_pos = []
+    move_pos = []
 
     current_pos = pos
 
-    move_dirs.each do |dx,dy|
+    move_directions.each do |dx,dy|
       current_pos = [current_pos[0] + dx, current_pos[1] + dy]
+
       while @board.on_board?(current_pos)
         if @board[current_pos].nil?
-          possible_pos << current_pos
+          move_pos << current_pos
           current_pos = [current_pos[0] + dx, current_pos[1] + dy]
         else
-          if @board[current_pos].color == @color
-            break
-          else
-            possible_pos << current_pos
-            break
-          end
+          move_pos << current_pos if @board[current_pos].color == @color
+          break
         end
       end
 
       current_pos = pos
     end
 
-    possible_pos
+    move_pos
   end
 
 end
 
 class Queen < SlidingPiece
 
-  def move_dirs
-    dirs = RANK_FILE_DELTAS + DIAG_DELTAS
-  end
-
   def display
     color == :white ? "♕" : "♛"
+  end
+
+  private
+
+  def move_directions
+    dirs = RANK_FILE_DELTAS + DIAG_DELTAS
   end
 
 end
 
 class Bishop <SlidingPiece
 
-  def move_dirs
-    dirs = DIAG_DELTAS
-  end
-
   def display
     color == :white ? "♗" : "♝"
+  end
+
+  private
+
+  def move_directions
+    dirs = DIAG_DELTAS
   end
 
 end
 
 class Rook <SlidingPiece
 
-  def move_dirs
-    dirs = RANK_FILE_DELTAS
-  end
-
   def display
     color == :white ? "♖" : "♜"
+  end
+
+  private
+
+  def move_directions
+    dirs = RANK_FILE_DELTAS
   end
 
 end
@@ -109,16 +111,16 @@ end
 class SteppingPiece < Piece
 
   def moves
+    move_pos = []
 
-    news = []
     deltas.each do |dx, dy|
       new_x, new_y = @pos[0] + dx, @pos[1] + dy
       if (0..7).include?(new_x) && (0..7).include?(new_y)
-        news << [new_x, new_y]
+        move_pos << [new_x, new_y]
       end
     end
 
-    news.select { |new_pos| @board[new_pos].nil? ||
+    move_pos.select { |new_pos| @board[new_pos].nil? ||
       @board[new_pos].color != @color }
   end
 
@@ -127,6 +129,12 @@ end
 
 class Knight < SteppingPiece
 
+  def display
+    color == :white ? "♘" : "♞"
+  end
+
+  private
+
   def deltas
     [[2, 1],[2, -1],
      [-2, 1],[-2, -1],
@@ -134,13 +142,15 @@ class Knight < SteppingPiece
      [-1, 2],[-1, -2]]
   end
 
-  def display
-    color == :white ? "♘" : "♞"
-  end
-
 end
 
 class King < SteppingPiece
+
+  def display
+    color == :white ? "♔" : "♚"
+  end
+
+  private
 
   def deltas
     [[1, 1],[-1, -1],
@@ -149,13 +159,37 @@ class King < SteppingPiece
      [0, 1],[0, -1]]
   end
 
-  def display
-    color == :white ? "♔" : "♚"
-  end
-
 end
 
 class Pawn < Piece
+  def display
+    color == :white ? "♙" : "♟"
+  end
+
+  def moves
+    moves_to_empty + captures
+  end
+
+  private
+
+  def moves_to_empty
+    dy = ( color == :white ? 1 : -1 )
+    move_pos = []
+
+    new_pos = [pos[0], pos[1] + dy] #regular move
+
+    if @board.on_board?(new_pos)
+      potential_moves << new_pos if @board[new_pos].nil?
+    end
+
+    new_pos = [pos[0], pos[1] + 2 * dy] #optional for first move only
+
+    if @board.on_board?(new_pos)
+      potential_moves << new_pos if pos[1] == 1 && @board[new_pos].nil?
+    end
+
+    move_pos
+  end
 
   def captures
     deltas = (color == :white ?  [[1,1], [-1,1]] : [[1,-1], [-1,-1]])
@@ -171,43 +205,5 @@ class Pawn < Piece
     capture_pos
   end
 
-  def moves
-    potential_moves = []
-
-    if color == :white
-
-      new_pos = [pos[0], pos[1]+1]
-
-      if @board.on_board?(new_pos)
-        potential_moves << new_pos if @board[new_pos].nil?
-      end
-
-      new_pos = [pos[0], pos[1]+2]
-
-      if @board.on_board?(new_pos)
-        potential_moves << new_pos if pos[1] == 1 && @board[new_pos].nil?
-      end
-
-    else
-      new_pos = [pos[0], pos[1] - 1]
-
-      if @board.on_board?(new_pos)
-        potential_moves << new_pos if @board[new_pos].nil?
-      end
-
-      new_pos = [pos[0], pos[1] - 2]
-
-      if @board.on_board?(new_pos)
-        potential_moves << new_pos if pos[1] == 6 && @board[new_pos].nil?
-      end
-
-    end
-
-    potential_moves + captures
-  end
-
-  def display
-    color == :white ? "♙" : "♟"
-  end
 
 end

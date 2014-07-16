@@ -11,26 +11,27 @@ class Board
   end
 
   def setup_board
-    Queen.new([3,0], self, :white)
-    Queen.new([3,7], self, :black)
 
     @white_king = King.new([4,0], self, :white)
     @black_king = King.new([4,7], self, :black)
+
+    Queen.new([3,0], self, :white)
+    Queen.new([3,7], self, :black)
 
     Bishop.new([2,0], self, :white)
     Bishop.new([5,0], self, :white)
     Bishop.new([2,7], self, :black)
     Bishop.new([5,7], self, :black)
 
-    Rook.new([0,0], self, :white)
-    Rook.new([7,0], self, :white)
-    Rook.new([0,7], self, :black)
-    Rook.new([7,7], self, :black)
-
     Knight.new([1,0], self, :white)
     Knight.new([6,0], self, :white)
     Knight.new([1,7], self, :black)
     Knight.new([6,7], self, :black)
+
+    Rook.new([0,0], self, :white)
+    Rook.new([7,0], self, :white)
+    Rook.new([0,7], self, :black)
+    Rook.new([7,7], self, :black)
 
     8.times do |i|
       Pawn.new([i,1], self, :white)
@@ -60,7 +61,7 @@ class Board
       print "   └#{"───┴"* (7)}───┘\n".colorize(:light_cyan)
       print "     A   B   C   D   E   F   G   H  \n".colorize(:light_black)
       nil
-    end
+  end
 
   def [](pos)
     x,y = pos
@@ -70,6 +71,7 @@ class Board
   def []=(pos, obj)
     x,y = pos
     @grid[x][y] = obj
+
     nil
   end
 
@@ -121,6 +123,7 @@ class Board
 
   def dup
     dup_board = Board.new(true)
+
     @grid.flatten.compact.each do |piece|
       if piece.class == King
         if piece.color == :white

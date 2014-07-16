@@ -1,4 +1,3 @@
-
 class Piece
 
   attr_accessor :pos
@@ -124,7 +123,6 @@ class SteppingPiece < Piece
       @board[new_pos].color != @color }
   end
 
-
 end
 
 class Knight < SteppingPiece
@@ -162,6 +160,7 @@ class King < SteppingPiece
 end
 
 class Pawn < Piece
+
   def display
     color == :white ? "♙" : "♟"
   end
@@ -204,6 +203,5 @@ class Pawn < Piece
 
     capture_pos
   end
-
 
 end

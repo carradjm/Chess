@@ -19,7 +19,19 @@ class Game
       puts "Check!" if board.in_check?(playing.color)
 
       begin
-        @board.move(*playing.choose_move, playing.color)
+        player_choice = playing.choose_move
+
+        if player_choice == :long
+          @board.castle(playing.color, :long)
+        elsif player_choice == :short
+          @board.castle(playing.color, :short)
+        else
+          @board.move(*player_choice, playing.color)
+        end
+
+      rescue NoCastleError
+        puts "You may not castle with that rook."
+        retry
 
       rescue NotYoPieceError
         puts "Stop cheating. Move your own piece.  Come on man."
@@ -71,9 +83,13 @@ class HumanPlayer
     begin
       input = gets.chomp
       check_input(input)
+
     rescue BadInput, ArgumentError
       puts "Please enter a correctly formatted move."
       retry
+
+    rescue Castling
+      return input.to_sym
     end
 
     input = input.split(",")
@@ -87,6 +103,8 @@ class HumanPlayer
   private
 
   def check_input(input)
+    raise Castling if input == "short" || input == "long"
+
     raise BadInput if input.size != 5
 
     Integer(input[1])
@@ -107,4 +125,7 @@ class HumanPlayer
 end
 
 class BadInput < StandardError
+end
+
+class Castling < StandardError
 end

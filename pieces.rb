@@ -102,6 +102,12 @@ class Bishop <SlidingPiece
 end
 
 class Rook <SlidingPiece
+  attr_accessor :has_moved
+
+  def initialize(pos, board, color)
+    super(pos, board, color)
+    @has_moved = false
+  end
 
   def display
     color == :white ? "♖" : "♜"
@@ -159,6 +165,12 @@ class Knight < SteppingPiece
 end
 
 class King < SteppingPiece
+  attr_accessor :has_moved
+
+  def initialize(pos, board, color)
+    super(pos, board, color)
+    @has_moved = false
+  end
 
   def display
     color == :white ? "♔" : "♚"

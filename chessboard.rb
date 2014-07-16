@@ -1,5 +1,6 @@
 require './pieces.rb'
 require 'colorize'
+require 'debugger'
 
 class Board
 
@@ -70,7 +71,7 @@ class Board
 
    def display
      colors = { 0 => :light_white, 1 => :white }
-     (0...8).to_a.reverse.each do |y|
+     7.downto(0) do |y| #underscore?
         print " #{y+1} ".colorize(:light_black)
 
         8.times do |x|
@@ -121,6 +122,10 @@ class Board
       self[end_pos] = self[start]
       self[end_pos].pos = end_pos
       self[start] = nil
+      if self[end_pos].class == King || self[end_pos].class == Rook
+        self[end_pos].has_moved = true
+      end
+
     else
       if self[start].moves.include?(end_pos)
         raise MoveToCheckError
@@ -131,6 +136,7 @@ class Board
 
     @jail.compact!
     @jail.sort_by! {|piece| piece.power}
+
     nil
   end
 
@@ -142,6 +148,43 @@ class Board
     end
 
     nil
+  end
+
+  def castle(color, side)
+    y = (color == :white ? 0 : 7)
+    king_x = 4
+    rook_x = (side == :long ? 0 : 7)
+
+    king_x_new = ( side == :long ? 2 : 6 )
+    rook_x_new = ( side == :long ? 3 : 5 )
+
+    king_x_path = ( side == :long ? [3, 2] : [5, 6] )
+    in_between_x = ( side == :long ? [1,2,3] : [5,6] )
+
+    raise NoCastleError if self[[king_x,y]].has_moved ||
+                            self[[rook_x,y]].has_moved
+
+    in_between_x.each do |x|
+      raise NoCastleError unless self[[x,y]].nil?
+    end
+
+    raise NoCastleError if in_check?(color) #may not be in check
+
+    king_x_path.each do |x| #king must not pass through check
+      temp_board = self.dup
+      temp_board[[x,y]], temp_board[[king_x,y]] = temp_board[[king_x,y]], nil
+      temp_board[[x,y]].pos = [x,y]
+
+      raise NoCastleError if temp_board.in_check?(color)
+    end
+
+    #king
+    self[[2,y]], self[[4,y]] = self[[4,y]], nil
+    self[[2,y]].pos = [2,y]
+
+    #rook
+    self[[3,y]], self[[0,y]] = self[[0,y]], nil
+    self[[3,y]].pos = [3,y]
   end
 
   def on_board?(pos)
@@ -207,4 +250,7 @@ class NotYoPieceError < StandardError
 end
 
 class MoveToCheckError < StandardError
+end
+
+class NoCastleError < StandardError
 end

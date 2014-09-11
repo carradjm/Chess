@@ -6,5 +6,5 @@ Everyone knows Chess! A purely Ruby-based Chess game playable from the terminal.
 ##To Run
 * Clone this repo
 * Navigate to this folder in your repo
-* ``$ ruby chess.rb``
+* ``$ ruby chess_game.rb``
 * Play against another human player and achieve eternal glory!

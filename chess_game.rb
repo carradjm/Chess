@@ -126,7 +126,6 @@ class HumanPlayer
   def file_to_x(file)
     'abcdefgh'.index(file)
   end
-
 end
 
 class BadInput < StandardError
@@ -134,3 +133,35 @@ end
 
 class Castling < StandardError
 end
+
+puts "What is the name of Player 1?"
+
+name1 = gets.chomp
+
+player1 = HumanPlayer.new(name1)
+
+puts "What is the name of Player 2?"
+
+name2 = gets.chomp
+
+player2 = HumanPlayer.new(name2)
+
+game = Game.new(player1, player2)
+
+puts "Are you ready to play (y/n)?"
+
+answer1 = gets.chomp
+
+if answer1 == "y"
+  game.play
+else
+  puts "Are you sure (y/n?)"
+  answer2 = gets.chomp
+  if answer2 == "y"
+    game.play
+  else
+    puts "Well you better get ready because here it comes!"
+    game.play
+  end
+end
+    
